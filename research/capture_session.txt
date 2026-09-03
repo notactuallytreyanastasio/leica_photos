@@ -1,0 +1,67 @@
+=== Leica M10 capture session: Thu Sep  3 15:50:59 EDT 2026 ===
+[0] Mac IP: 192.168.1.188
+[1] Starting packet capture (sudo password prompt)...
+    capture running (pid 82045) -> leica_capture.pcap
+
+[2] Running probe2 (strategy matrix, ~1 minute)...
+tcpdump: listening on en0, link-type EN10MB (Ethernet), snapshot length 524288 bytes
+
+===== STRATEGY: A: sessionless GetDeviceInfo =====
+  [connect 192.168.1.2:15740]
+    <<C InitCommandAck len=52
+       camera name: ''
+    <<E InitEventAck len=8
+        (empty)
+  [handshake OK]
+  >> GetDeviceInfo
+  >> CmdRequest op=0x1001 txid=1 phase=1 params=[] 
+  .. no response within 6.0s
+  [GetDeviceInfo result: code=None data=None]
+  >> CmdRequest op=0x1003 txid=2 phase=1 params=[] 
+  .. no response within 3.0s
+
+===== STRATEGY: B: OpenSession(sid=1) [gphoto2 style] =====
+  [connect 192.168.1.2:15740]
+    <<C InitCommandAck len=52
+       camera name: ''
+    <<E InitEventAck len=8
+        (empty)
+  [handshake OK]
+  >> session open op=0x1002 sid=1 phase=1
+  >> CmdRequest op=0x1002 txid=1 phase=1 params=['0x1'] 
+  .. no response within 6.0s
+  [session open response: None]
+  >> CmdRequest op=0x1003 txid=2 phase=1 params=[] 
+  .. no response within 3.0s
+
+===== STRATEGY: C: OpenSession(sid=0, txid=0) =====
+  [connect 192.168.1.2:15740]
+  [strategy failed: TimeoutError: timed out]
+  >> CmdRequest op=0x1003 txid=1 phase=1 params=[] 
+  .. no response within 3.0s
+
+===== STRATEGY: D: Leica LEOpenSession 0x9005(param 0) =====
+  [connect 192.168.1.2:15740]
+  [strategy failed: TimeoutError: timed out]
+  >> CmdRequest op=0x1003 txid=1 phase=1 params=[] 
+  .. no response within 3.0s
+
+===== STRATEGY: E: OpenSession(dataphase=0) =====
+  [connect 192.168.1.2:15740]
+  [strategy failed: TimeoutError: timed out]
+  >> CmdRequest op=0x1003 txid=1 phase=1 params=[] 
+  .. no response within 3.0s
+
+===== ALL STRATEGIES TRIED =====
+    probe2 done.
+
+[3] Launching Leica Sync (the working reference app)...
+    Leica Sync is opening.
+
+    >>> IN THE LEICA SYNC WINDOW: select your camera, let it connect,
+    >>> wait until you see thumbnails of your photos.
+    >>> THEN come back here and press ENTER.
+
+650 packets captured
+195748 packets received by filter
+0 packets dropped by kernel

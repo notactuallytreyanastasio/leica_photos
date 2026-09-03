@@ -1,0 +1,4 @@
+Lookup LeicaM10-5230856._ptp._tcp.local
+DATE: ---Thu 03 Sep 2026---
+15:43:04.337  ...STARTING...
+15:43:04.338  LeicaM10-5230856._ptp._tcp.local. can be reached at LeicaM10-5230856.local.:15740 (interface 14)

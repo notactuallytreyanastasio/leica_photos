@@ -1,0 +1,5 @@
+Browsing for _ptp._tcp
+DATE: ---Thu 03 Sep 2026---
+15:42:56.304  ...STARTING...
+Timestamp     A/R    Flags  if Domain               Service Type         Instance Name
+15:42:56.304  Add        2  14 local.               _ptp._tcp.           LeicaM10-5230856

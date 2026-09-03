@@ -1,0 +1,59 @@
+=== Leica M10 probe run: Thu Sep  3 15:42:56 EDT 2026 ===
+
+[1] Mac IP on this network: 192.168.1.188
+
+[2] Browsing for _ptp._tcp services (8 seconds)...
+Browsing for _ptp._tcp
+DATE: ---Thu 03 Sep 2026---
+15:42:56.304  ...STARTING...
+Timestamp     A/R    Flags  if Domain               Service Type         Instance Name
+15:42:56.304  Add        2  14 local.               _ptp._tcp.           LeicaM10-5230856
+    Found service instance: 'LeicaM10-5230856'
+
+[3] Resolving 'LeicaM10-5230856' (8 seconds)...
+Lookup LeicaM10-5230856._ptp._tcp.local
+DATE: ---Thu 03 Sep 2026---
+15:43:04.337  ...STARTING...
+15:43:04.338  LeicaM10-5230856._ptp._tcp.local. can be reached at LeicaM10-5230856.local.:15740 (interface 14)
+
+[4] PTP/IP probe...
+---- attempting 192.168.1.2:15740 ----
+[+] command channel up: camera='LEICA M10' conn_id=1 guid=00000000000000000000000000000000
+[+] event channel up
+[*] OpenSession...
+Traceback (most recent call last):
+  File "/Users/bg/code/glm_funk/research/ptpip_probe.py", line 272, in <module>
+    main()
+    ~~~~^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe.py", line 238, in main
+    code, params = c.transact(OC_OpenSession, [0xC0FFEE])
+                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe.py", line 126, in transact
+    ptype, data = self._recv(self.cmd)
+                  ~~~~~~~~~~^^^^^^^^^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe.py", line 66, in _recv
+    length, ptype = struct.unpack("<II", self._recv_exact(sock, 8))
+                                         ~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe.py", line 59, in _recv_exact
+    chunk = sock.recv(n - len(buf))
+TimeoutError: timed out
+---- attempting 192.168.1.1:15740 ----
+Traceback (most recent call last):
+  File "/Users/bg/code/glm_funk/research/ptpip_probe.py", line 272, in <module>
+    main()
+    ~~~~^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe.py", line 235, in main
+    c.connect()
+    ~~~~~~~~~^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe.py", line 73, in connect
+    self.cmd = socket.create_connection((self.host, self.port), timeout=10)
+               ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socket.py", line 874, in create_connection
+    raise exceptions[0]
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socket.py", line 859, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+OSError: [Errno 64] Host is down
+
+=== ALL DONE ===
+Now: click your HOME network in the WiFi menu, then tell the agent 'done'.

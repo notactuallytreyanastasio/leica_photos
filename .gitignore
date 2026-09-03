@@ -1,0 +1,10 @@
+# build artifacts
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.DS_Store
+
+# junk from early scrape attempts
+research/dl.html
+research/fotos.apk

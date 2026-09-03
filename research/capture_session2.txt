@@ -1,0 +1,56 @@
+=== Leica M10 capture session #2: Thu Sep  3 15:59:38 EDT 2026 ===
+[0] Mac IP: 192.168.1.188
+[1] Starting packet capture (sudo password prompt)...
+    capture running -> leica_capture2.pcap
+
+[2] Launching Leica Sync (known-good client, fresh camera)...
+tcpdump: listening on en0, link-type EN10MB (Ethernet), snapshot length 524288 bytes
+    Leica Sync is opening.
+
+    >>> IN LEICA SYNC: select your camera, wait for thumbnails.
+    >>> If it shows photos: also DOWNLOAD ONE image (we want that traffic).
+    >>> THEN come back here and press ENTER.
+
+[3] Quitting Leica Sync (cleanly)...
+
+[4] Running probe3 (single clean session, txid starts at 0)...
+  [connect 192.168.1.2:15740]
+    <<C InitCommandAck len=52 
+       camera name: 'LEICA M10'
+       connection number: 1
+    <<E InitEventAck len=8  (0B)
+  [handshake OK]
+
+  === OpenSession (txid=0!) ===
+  >> op=0x1002 txid=0 params=['0x1']
+
+  === CloseSession ===
+  >> op=0x1003 txid=1 params=[]
+  [CloseSession failed: timed out]
+
+  DONE (clean exit — camera should stay healthy)
+Traceback (most recent call last):
+  File "/Users/bg/code/glm_funk/research/ptpip_probe3.py", line 253, in <module>
+    main()
+    ~~~~^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe3.py", line 206, in main
+    code, params = cam.cmd_no_data(OC_OpenSession, [1])
+                   ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe3.py", line 110, in cmd_no_data
+    ptype, payload = self._recv(self.cmd, timeout=8.0)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe3.py", line 65, in _recv
+    length, ptype = struct.unpack("<II", self._recv_exact(sock, 8, timeout))
+                                         ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/bg/code/glm_funk/research/ptpip_probe3.py", line 58, in _recv_exact
+    chunk = sock.recv(n - len(buf))
+TimeoutError: timed out
+
+[5] Stopping capture...
+41113 packets captured
+41140 packets received by filter
+0 packets dropped by kernel
+    capture stopped.
+-rw-r--r--@ 1 root  staff  41002848 Sep  3 16:00 leica_capture2.pcap
+
+=== CAPTURE SESSION #2 DONE ===
