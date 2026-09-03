@@ -1,8 +1,8 @@
 import Foundation
-import Photos
+import UIKit
 import M10Kit
 
-/// App-wide state machine + camera session owner.
+/// App-wide state machine, camera session owner, and cache front-end.
 @MainActor
 final class AppState: ObservableObject {
     enum Phase: Equatable {
@@ -12,34 +12,54 @@ final class AppState: ObservableObject {
         case failed(String)
     }
 
-    @Published var phase: Phase = .disconnected
-    @Published var cameraName: String = ""
-    @Published var batteryPercent: Int = -1
-    @Published var photos: [PhotoItem] = []
-    @Published var starredOnly = false
+    enum Filter: String, CaseIterable, Identifiable {
+        case all = "All"
+        case starred = "★"
+        case jpeg = "JPEG"
+        case dng = "DNG"
+        var id: String { rawValue }
+    }
 
-    // download state
+    @Published var phase: Phase = .disconnected
+    // camera info header
+    @Published var cameraName: String = ""
+    @Published var firmwareVersion: String = ""
+    @Published var serialNumber: String = ""
+    @Published var batteryPercent: Int = -1
+
+    @Published var photos: [PhotoItem] = []
+    @Published var filter: Filter = .all
+
+    // download state (disk-backed via cache)
     @Published var downloadProgress: [UInt32: Double] = [:]
-    @Published var downloaded: [UInt32: Data] = [:]
+    @Published var fullPhotos: Set<UInt32> = []
     @Published var ratings: [UInt32: Int] = [:]
     @Published var savedToPhotos: Set<UInt32> = []
 
-    // wifi join fields
-    @Published var ssid: String = ""
+    // wifi join
+    @Published var ssid: String = UserDefaults.standard.string(forKey: "m10.ssid") ?? ""
     @Published var wifiPassword: String = ""
     @Published var wifiStatus: String?
 
-    /// The camera session, when connected. All camera I/O goes through it
-    /// with GentleClientRules enforced (first timeout aborts, session cap).
+    // sequential starred import
+    @Published var starredImportRunning = false
+    @Published var starredImportMessage: String?
+
+    // settings
+    @Published var cacheUsage: (entries: Int, fulls: Int, thumbs: Int, bytes: Int)?
+    @Published var showSettings = false
+
     private(set) var session: M10Session?
+    private let cache = PhotoCache()
 
     private nonisolated static let sessionRules: GentleClientRules = {
         var r = GentleClientRules()
-        // interactive browsing session: longer than the probe default,
-        // still capped. First timeout always aborts regardless.
-        r.maxSessionDuration = 600
+        r.maxSessionDuration = 600   // interactive session; still capped
         return r
     }()
+
+    // MARK: - connect / disconnect
+
     func connect() {
         phase = .connecting
         Task.detached(priority: .userInitiated) {
@@ -48,35 +68,70 @@ final class AppState: ObservableObject {
                 let session = M10Session(host: endpoint.host, port: endpoint.port,
                                          rules: Self.sessionRules)
                 try session.connectAndOpenSession()
-
                 let info = try session.deviceInfo()
                 let battery = (try? session.batteryPercent()) ?? -1
                 let handles = try session.objectHandles()
-
-                await self.finishConnect(session: session, name: info.model,
+                await self.finishConnect(session: session, info: info,
                                          battery: battery, handles: handles)
             } catch {
-                await self.failConnect(String(describing: error))
+                await self.failConnect(error)
             }
         }
     }
 
-    private func finishConnect(session: M10Session, name: String,
-                               battery: Int, handles: [UInt32]) {
+    private func finishConnect(session: M10Session, info: DeviceInfo,
+                               battery: Int, handles: [UInt32]) async {
         self.session = session
-        self.cameraName = name
-        self.batteryPercent = battery
-        // newest-first: photo handles ascend with capture order
+        cameraName = info.model
+        firmwareVersion = info.deviceVersion
+        serialNumber = info.serial
+        batteryPercent = battery
+
         let photoHandles = handles.filter { $0 > 0x8190_0000 }.sorted(by: >)
-        self.photos = photoHandles.map { PhotoItem(handle: $0) }
-        self.phase = .connected
+        // hydrate from disk cache — known photos cost the camera nothing
+        let hydration = await cache.hydrate(handles: photoHandles)
+        photos = photoHandles.map { h in
+            let hy = hydration[h]
+            let item = PhotoItem(handle: h)
+            item.info = hy?.info
+            item.thumb = nil   // thumbs load lazily from cache/camera
+            if hy?.hasFull == true { fullPhotos.insert(h) }
+            if let r = hy?.rating { ratings[h] = r }
+            if hy?.saved == true { savedToPhotos.insert(h) }
+            return item
+        }
+        phase = .connected
+        await refreshCacheUsage()
     }
 
-    private func failConnect(_ message: String) {
+    private func failConnect(_ error: Error) {
         session?.close()
         session = nil
-        downloadProgress = [:]   // unblock any UI progress pumps
-        phase = .failed(message)
+        downloadProgress = [:]
+        phase = .failed(Self.friendlyMessage(error))
+    }
+
+    static func friendlyMessage(_ error: Error) -> String {
+        if let m10 = error as? M10Error {
+            switch m10 {
+            case .cameraUnreachable:
+                return "Can't reach the camera. Check you're on its WiFi network, then try again."
+            case .timeout:
+                return "The camera stopped responding — it may need a rest. Cycle its WiFi and reconnect."
+            case .sessionExpired:
+                return "Session ended (camera safety cap). Reconnect to start a fresh session."
+            case .cameraWedged:
+                return "The camera's server is stuck. Turn its WiFi off and on, then reconnect."
+            case .initFailed:
+                return "The camera declined the connection. Is another device (FOTOS app) connected?"
+            case .cameraErrorResponse, .unexpectedPacket, .parse:
+                return "Camera communication hiccup: \(String(describing: m10))"
+            }
+        }
+        if let d = error as? CameraDiscovery.DiscoveryError {
+            return d.errorDescription ?? "No camera found."
+        }
+        return "Something went wrong: \(String(describing: error))"
     }
 
     func disconnect() {
@@ -84,14 +139,14 @@ final class AppState: ObservableObject {
         session = nil
         photos = []
         downloadProgress = [:]
-        downloaded = [:]
+        fullPhotos = []
         ratings = [:]
         savedToPhotos = []
         phase = .disconnected
     }
 
-    /// Fetch metadata for the next batch of visible photos (paging in
-    /// newest-first order, gently paced by the session rules).
+    // MARK: - browsing (cache-first)
+
     func loadInfos(for items: [PhotoItem]) async {
         guard let session else { return }
         let unknown = items.filter { $0.info == nil }
@@ -101,35 +156,53 @@ final class AppState: ObservableObject {
                 if let idx = photos.firstIndex(where: { $0.handle == item.handle }) {
                     photos[idx].info = info
                 }
+                await cache.storeObjectInfo(info, rawData: info.rawData)
             } catch {
-                // First failure aborts the session (camera fragility rule)
-                failConnect("Camera stopped responding: \(error)")
+                failConnect(error)
                 return
             }
         }
     }
 
-    /// Fetch a thumbnail for one photo (called lazily by the grid).
     func thumbnail(for item: PhotoItem) async -> Data? {
-        guard let session, item.thumb == nil else { return item.thumb }
+        if item.thumb != nil { return item.thumb }
+        // disk cache first
+        if let data = await cache.thumbnailData(for: item.handle) {
+            if let idx = photos.firstIndex(where: { $0.handle == item.handle }) {
+                photos[idx].thumb = data
+            }
+            return data
+        }
+        guard let session else { return nil }
         do {
             let data = try session.thumbnail(handle: item.handle)
+            await cache.storeThumbnail(item.handle, data: data)
             if let idx = photos.firstIndex(where: { $0.handle == item.handle }) {
                 photos[idx].thumb = data
             }
             return data
         } catch {
-            failConnect("Camera stopped responding: \(error)")
+            failConnect(error)
             return nil
         }
     }
 
-    // MARK: - Download & rating
+    // MARK: - download (cache-first)
 
-    /// Download the full photo from the camera. On completion the star
-    /// rating (xmp:Rating in the file) is known.
     func downloadPhoto(_ handle: UInt32) async {
-        guard let session, downloaded[handle] == nil else { return }
+        guard session != nil, !fullPhotos.contains(handle),
+              downloadProgress[handle] == nil else { return }
+
+        // already on disk from a previous session?
+        if let data = await cache.fullPhotoData(for: handle) {
+            fullPhotos.insert(handle)
+            ratings[handle] = XmpRating.extract(from: data) ?? 0
+            await cache.setRating(handle, ratings[handle] ?? 0)
+            Haptics.success()
+            return
+        }
+
+        guard let session else { return }
         downloadProgress[handle] = 0
         let box = ProgressBox()
         Task.detached(priority: .userInitiated) { [weak self] in
@@ -139,11 +212,9 @@ final class AppState: ObservableObject {
                 }
                 await self?.finishDownload(handle: handle, data: data)
             } catch {
-                await self?.failConnect("Download failed: \(error)")
+                await self?.failConnect(error)
             }
         }
-        // pump progress to the UI while the transfer runs; the entry is
-        // cleared on completion (or failure tears the session down)
         while downloadProgress[handle] != nil {
             if let (done, total) = box.snapshot(), total > 0 {
                 downloadProgress[handle] = Double(done) / Double(total)
@@ -152,35 +223,23 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func finishDownload(handle: UInt32, data: Data) {
-        downloaded[handle] = data
-        ratings[handle] = XmpRating.extract(from: data) ?? 0
+    private func finishDownload(handle: UInt32, data: Data) async {
+        await cache.storeFullPhoto(handle, data: data)
+        let rating = XmpRating.extract(from: data) ?? 0
+        await cache.setRating(handle, rating)
+        fullPhotos.insert(handle)
+        ratings[handle] = rating
         downloadProgress[handle] = nil
+        Haptics.success()
+    }
+
+    /// Full photo bytes from disk cache (nil if not downloaded).
+    func photoData(for handle: UInt32) async -> Data? {
+        await cache.fullPhotoData(for: handle)
     }
 
     // MARK: - Apple Photos
 
-    /// Save a downloaded photo to Apple Photos. Album rules:
-    /// starred → Favorite + "Best of Leica"; DNG → "RAW Leica".
-    func saveToPhotos(_ handle: UInt32) async {
-        guard let data = downloaded[handle],
-              let info = photos.first(where: { $0.handle == handle })?.info else { return }
-        let favorite = (ratings[handle] ?? 0) > 0
-        let albums = PhotoKitService.albums(
-            favorite: favorite, filename: info.filename,
-            formatCode: info.formatCode)
-        do {
-            try await PhotoKitService.importPhoto(
-                data: data, filename: info.filename,
-                favorite: favorite, albums: albums)
-            savedToPhotos.insert(handle)
-        } catch {
-            wifiStatus = "Save failed: \(error.localizedDescription)"
-        }
-    }
-
-    /// Album names for a downloaded photo, per the product rules
-    /// (starred → "Best of Leica", DNG → "RAW Leica").
     func albumNames(for handle: UInt32) -> [String] {
         guard let info = photos.first(where: { $0.handle == handle })?.info else { return [] }
         return PhotoKitService.albums(
@@ -189,25 +248,39 @@ final class AppState: ObservableObject {
             formatCode: info.formatCode)
     }
 
-    /// Sequential importer for the downloaded-and-starred photos.
-    /// The M10 can't do bulk (sessions wedge) — so: one at a time, stop on
-    /// the first failure, resume where it left off. Not a bulk queue.
-    @Published var starredImportRunning = false
-    @Published var starredImportMessage: String?
+    func saveToPhotos(_ handle: UInt32) async {
+        guard let data = await cache.fullPhotoData(for: handle),
+              let info = photos.first(where: { $0.handle == handle })?.info else { return }
+        let favorite = (ratings[handle] ?? 0) > 0
+        let albums = PhotoKitService.albums(
+            favorite: favorite, filename: info.filename, formatCode: info.formatCode)
+        do {
+            try await PhotoKitService.importPhoto(
+                data: data, filename: info.filename,
+                favorite: favorite, albums: albums)
+            savedToPhotos.insert(handle)
+            await cache.markSavedToPhotos(handle)
+            Haptics.success()
+        } catch {
+            wifiStatus = "Save failed: \(error.localizedDescription)"
+        }
+    }
 
+    /// Sequential importer for downloaded-and-starred photos. The M10
+    /// can't do bulk — one at a time, stop on first failure, resumable.
     func saveStarredDownloaded() async {
         guard !starredImportRunning else { return }
         let pending = photos.map(\.handle).filter {
-            (ratings[$0] ?? 0) > 0 && downloaded[$0] != nil && !savedToPhotos.contains($0)
+            (ratings[$0] ?? 0) > 0 && fullPhotos.contains($0) && !savedToPhotos.contains($0)
         }
         guard !pending.isEmpty else {
-            starredImportMessage = "No starred downloads waiting."
+            starredImportMessage = "No starred downloads waiting — download photos first, then run this."
             return
         }
         starredImportRunning = true
         starredImportMessage = nil
         for handle in pending {
-            starredImportMessage = "Saving \(pending.index(of: handle)! + 1) of \(pending.count)…"
+            starredImportMessage = "Saving \(pending.firstIndex(of: handle)! + 1) of \(pending.count)…"
             await saveToPhotos(handle)
             if !savedToPhotos.contains(handle) {
                 starredImportMessage = "Stopped: \(wifiStatus ?? "save failed") — tap again to resume."
@@ -221,30 +294,59 @@ final class AppState: ObservableObject {
 
     // MARK: - WiFi join
 
-    /// Join the camera's WiFi network via NEHotspotConfiguration
-    /// (the GoPro-style in-app join prompt). Requires the Hotspot
-    /// Configuration entitlement on a real device.
     func joinCameraWiFi() async {
         guard !ssid.isEmpty else {
             wifiStatus = "Enter the camera's network name (shown on its screen)"
             return
         }
+        // remember SSID; password goes in the keychain, not UserDefaults
+        UserDefaults.standard.set(ssid, forKey: "m10.ssid")
+        if wifiPassword.isEmpty {
+            wifiPassword = Keychain.loadPassword(forSSID: ssid) ?? ""
+        }
         do {
-            try await WifiJoin.join(ssid: ssid, passphrase: wifiPassword.isEmpty ? nil : wifiPassword)
+            try await WifiJoin.join(ssid: ssid,
+                                    passphrase: wifiPassword.isEmpty ? nil : wifiPassword)
+            Keychain.savePassword(wifiPassword, forSSID: ssid)
             wifiStatus = "Joined \(ssid)."
         } catch {
             wifiStatus = "Join failed: \(error.localizedDescription)"
         }
     }
 
+    // MARK: - filters
+
     var visiblePhotos: [PhotoItem] {
-        if starredOnly {
-            // starred status is known once downloaded (xmp:Rating in the
-            // file); the MTP object-property path can pre-read it later.
-            photos.filter { (ratings[$0.handle] ?? 0) > 0 }
-        } else {
-            photos
+        switch filter {
+        case .all:
+            return photos
+        case .starred:
+            return photos.filter { (ratings[$0.handle] ?? 0) > 0 }
+        case .jpeg:
+            return photos.filter { $0.info?.format == .exifJpeg }
+        case .dng:
+            return photos.filter { $0.info?.format == .tiffDNG }
         }
+    }
+
+    // MARK: - settings / cache maintenance
+
+    func refreshCacheUsage() async {
+        cacheUsage = await cache.usage()
+    }
+
+    func clearCache(keepMetadata: Bool) async {
+        await cache.clear(keepMetadata: keepMetadata)
+        if keepMetadata {
+            // media dropped; metadata + status survive
+        } else {
+            fullPhotos = []
+            ratings = [:]
+            savedToPhotos = []
+            for idx in photos.indices { photos[idx].thumb = nil }
+        }
+        await refreshCacheUsage()
+        Haptics.success()
     }
 }
 
@@ -265,8 +367,16 @@ private final class ProgressBox: @unchecked Sendable {
     }
 }
 
+/// Impact feedback, kept in one place.
+enum Haptics {
+    static func success() {
+        let gen = UINotificationFeedbackGenerator()
+        gen.notificationOccurred(.success)
+    }
+}
+
 /// One photo in the browser.
-struct PhotoItem: Identifiable {
+final class PhotoItem: Identifiable {
     let handle: UInt32
     var info: ObjectInfo?
     var thumb: Data?

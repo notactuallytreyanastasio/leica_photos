@@ -114,6 +114,9 @@ public struct ObjectInfo: Sendable {
     public let filename: String
     public let captured: String        // "YYYYMMDDThhmmss.s"
     public let modified: String
+    /// The raw dataset as served by the camera — cached verbatim so
+    /// re-browsing needs zero camera queries for known photos.
+    public let rawData: Data
 
     /// Fixed part is 52 bytes (same as USB), then 3 u8-prefixed UTF-16
     /// strings: filename, captureDate, modificationDate. One trailing
@@ -138,6 +141,7 @@ public struct ObjectInfo: Sendable {
         filename = try r.ptpString()
         captured = try r.ptpString()
         modified = try r.ptpString()
+        rawData = data
     }
 
     public var isPhoto: Bool { format.isPhoto }

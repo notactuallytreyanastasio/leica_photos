@@ -134,3 +134,33 @@ final class CodecGroundTruthTests: XCTestCase {
         XCTAssertNil(XmpRating.extract(from: Data("no rating here".utf8)))
     }
 }
+
+// MARK: - EXIF (from the real DNG's first 64KB)
+
+final class ExifGroundTruthTests: XCTestCase {
+    private func fixture(_ name: String) throws -> Data {
+        let url = Bundle.module.url(forResource: name, withExtension: "bin",
+                                    subdirectory: "Fixtures")!
+        return try Data(contentsOf: url)
+    }
+
+    func testExifFromRealDNG() throws {
+        let head = try fixture("dng_head")
+        let exif = ExifInfo.parse(head)
+        XCTAssertEqual(exif.model, "LEICA M10")
+        XCTAssertEqual(exif.lensModel, "Apo-Summicron-M 1:2/90 ASPH.")
+        XCTAssertEqual(exif.iso, 3200)
+        XCTAssertEqual(exif.focalLengthMM, 90)
+        XCTAssertEqual(exif.exposureLabel, "1/60s")
+        XCTAssertEqual(exif.dateTimeOriginal, "2026:08:20 18:16:41")
+        // M10 writes APEX values; aperture derives from ApertureValue
+        XCTAssertEqual(exif.apertureLabel, "f/2.8")
+        XCTAssertNotNil(exif.summaryLine)
+    }
+
+    func testExifGarbageIsHarmless() {
+        var info = ExifInfo.parse(Data("not a tiff".utf8))
+        info = ExifInfo.parse(Data([0xFF, 0xD8, 0xFF, 0xE0]))
+        XCTAssertNil(info.model)
+    }
+}

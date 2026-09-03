@@ -1,11 +1,14 @@
 import SwiftUI
 import M10Kit
 
-/// Full photo view: metadata, download with progress, star status,
-/// and save-to-Photos (Favorite + album) once downloaded.
+/// Full photo view: EXIF line, metadata, download with progress, star
+/// status, and save-to-Photos (Favorite + albums) once downloaded.
 struct PhotoDetailView: View {
     @EnvironmentObject var appState: AppState
     let handle: UInt32
+
+    @State private var previewData: Data?
+    @State private var exif: ExifInfo?
 
     private var item: PhotoItem? {
         appState.photos.first { $0.handle == handle }
@@ -18,13 +21,21 @@ struct PhotoDetailView: View {
             if let item {
                 content(item: item)
             } else {
-                Text("Photo not found")
-                    .foregroundStyle(.secondary)
+                Text("Photo not found").foregroundStyle(.secondary)
             }
         }
         .navigationTitle(info?.filename ?? "Photo")
         .navigationBarTitleDisplayMode(.inline)
-        .task { if let item { await appState.loadInfos(for: [item]) } }
+        .task {
+            if let item { await appState.loadInfos(for: [item]) }
+            await loadPreview()
+        }
+    }
+
+    private func loadPreview() async {
+        guard let data = await appState.photoData(for: handle) else { return }
+        previewData = data
+        exif = ExifInfo.parse(data)
     }
 
     @ViewBuilder
@@ -32,6 +43,24 @@ struct PhotoDetailView: View {
         ScrollView {
             VStack(spacing: 16) {
                 preview(item: item)
+
+                if let exif, let line = exif.summaryLine {
+                    HStack(spacing: 4) {
+                        Image(systemName: "camera.metering.matrix")
+                            .font(.caption)
+                        Text(line)
+                            .font(.subheadline.weight(.medium))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(.quaternary.opacity(0.4),
+                                in: RoundedRectangle(cornerRadius: 8))
+                    if let lens = exif.lensModel {
+                        Text(lens)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
 
                 if let info {
                     metadataCard(info: info)
@@ -47,27 +76,28 @@ struct PhotoDetailView: View {
     private func preview(item: PhotoItem) -> some View {
         let rating = appState.ratings[handle]
         ZStack(alignment: .topTrailing) {
-            if let data = appState.downloaded[handle],
+            if let data = previewData ?? item.thumb,
                let ui = UIImage(data: data) {
-                // JPEGs render; DNGs won't via UIImage — fall through
-                Image(uiImage: ui)
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else if let thumb = item.thumb, let ui = UIImage(data: thumb) {
                 Image(uiImage: ui)
                     .resizable()
                     .scaledToFit()
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .overlay(alignment: .bottom) {
-                        if appState.downloaded[handle] != nil {
-                            Text("DNG — full quality downloaded")
+                        if appState.fullPhotos.contains(handle),
+                           previewData != nil,
+                           info?.format == .tiffDNG {
+                            Text("DNG — full quality in cache")
                                 .font(.caption2)
                                 .padding(4)
                                 .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 4))
                                 .padding(4)
                         }
                     }
+            } else if let thumb = item.thumb, let ui = UIImage(data: thumb) {
+                Image(uiImage: ui)
+                    .resizable()
+                    .scaledToFit()
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(.quaternary)
@@ -91,12 +121,17 @@ struct PhotoDetailView: View {
     private func metadataCard(info: ObjectInfo) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             LabeledRow("Format", info.format.displayName)
-            LabeledRow("Size", ByteCountFormatter.string(fromByteCount: Int64(info.size), countStyle: .file))
+            LabeledRow("Size",
+                       ByteCountFormatter.string(fromByteCount: Int64(info.size),
+                                                 countStyle: .file))
             if info.pixels.w > 0 {
                 LabeledRow("Resolution", "\(info.pixels.w) × \(info.pixels.h)")
             }
             LabeledRow("Captured", info.captured)
             LabeledRow("Handle", String(format: "%08X", info.handle))
+            if let exif, let dt = exif.dateTimeOriginal {
+                LabeledRow("Timestamp", dt)
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -105,7 +140,7 @@ struct PhotoDetailView: View {
 
     @ViewBuilder
     private func actions(item: PhotoItem) -> some View {
-        let isDownloaded = appState.downloaded[handle] != nil
+        let isDownloaded = appState.fullPhotos.contains(handle)
         let progress = appState.downloadProgress[handle]
 
         VStack(spacing: 12) {
@@ -115,7 +150,10 @@ struct PhotoDetailView: View {
                 }
             } else if !isDownloaded {
                 Button {
-                    Task { await appState.downloadPhoto(handle) }
+                    Task {
+                        await appState.downloadPhoto(handle)
+                        await loadPreview()
+                    }
                 } label: {
                     Label("Download from camera", systemImage: "arrow.down.circle")
                         .frame(maxWidth: .infinity)
@@ -145,6 +183,12 @@ struct PhotoDetailView: View {
                     }
                     .buttonStyle(.borderedProminent)
                 }
+            }
+
+            if let rating = appState.ratings[handle], rating > 0 {
+                Text("Starred on camera (xmp:Rating \(rating))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.top)
