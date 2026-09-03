@@ -12,9 +12,20 @@ struct BrowserView: View {
                 cameraHeader
                 filterBar
                 photoSections
+                if appState.metadataLoading {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text("Loading photo info \(appState.metadataLoadedCount)/\(appState.photos.count)…")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 12)
+                }
             }
             .padding(.horizontal, 4)
         }
+        .searchable(text: $appState.searchText, prompt: "Search filename")
+        .task { await appState.loadNextMetadataPage() }
         .navigationTitle(appState.cameraName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -136,8 +147,12 @@ struct BrowserView: View {
                             }
                             .buttonStyle(.plain)
                             .task {
-                                await appState.loadInfos(for: [item])
                                 _ = await appState.thumbnail(for: item)
+                                // near the end of loaded metadata? fetch next page
+                                if let idx = appState.photos.firstIndex(where: { $0.handle == item.handle }),
+                                   idx % 50 == 40 {
+                                    await appState.loadNextMetadataPage()
+                                }
                             }
                         }
                     }

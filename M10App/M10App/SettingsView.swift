@@ -37,6 +37,25 @@ struct SettingsView: View {
                     LabeledRow("Plain JPEG", "library only")
                 }
 
+                Section("Experimental") {
+                    Toggle("Probe object properties on connect", isOn: $appState.experimentalPreread)
+                    if let codes = appState.discoveredObjectProps {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Camera reports \(codes.count) object properties:")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(codes.map { String(format: "%04X", $0) }.joined(separator: " "))
+                                .font(.caption2.monospaced())
+                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
+                        }
+                    } else if appState.experimentalPreread {
+                        Text("Probe runs once after the next connect.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 Section("About") {
                     LabeledRow("Camera", appState.cameraName.isEmpty ? "—" : appState.cameraName)
                     LabeledRow("Firmware", appState.firmwareVersion)

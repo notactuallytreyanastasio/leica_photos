@@ -159,6 +159,28 @@ public final class M10Session: @unchecked Sendable {
         try queue.sync { try transactData(PtpOpcode.getObject, params: [handle], progress: progress) }
     }
 
+    // MARK: - MTP object properties (experimental rating path)
+
+    /// Which object property codes exist for a photo (MTP 0x9801).
+    /// Used to discover whether the star rating can be read pre-download.
+    public func objectPropsSupported(handle: UInt32) throws -> [UInt16] {
+        let blob = try queue.sync {
+            try transactData(PtpOpcode.getObjectPropsSupported, params: [handle, 0])
+        }
+        var r = LEReader(blob)
+        guard let n = try? r.u32(), n <= 512,
+              let codes = try? (0..<n).map({ _ in try r.u16() }) else {
+            throw M10Error.parse("object props supported")
+        }
+        return codes
+    }
+
+    /// Raw value of one object property (MTP 0x9803). Typed decoding is
+    /// the caller's job — property formats aren't known until discovered.
+    public func objectPropValue(handle: UInt32, prop: UInt16) throws -> Data {
+        try queue.sync { try transactData(PtpOpcode.getObjectPropValue, params: [handle, UInt32(prop), 0]) }
+    }
+
     // MARK: - Transaction engine (queue only)
 
     private func checkBudget() throws {

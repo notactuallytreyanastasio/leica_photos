@@ -102,6 +102,9 @@ final class AppState: ObservableObject {
         }
         phase = .connected
         await refreshCacheUsage()
+        if experimentalPreread {
+            await probeObjectProps()
+        }
     }
 
     private func failConnect(_ error: Error) {
@@ -145,8 +148,38 @@ final class AppState: ObservableObject {
         phase = .disconnected
     }
 
-    // MARK: - browsing (cache-first)
+    // MARK: - browsing (cache-first, paged)
 
+    @Published var metadataLoading = false
+    @Published var metadataLoadedCount = 0
+    @Published var searchText = ""
+
+    /// Load the next page of photo metadata (newest-first), 50 at a time,
+    /// cache-first. Called by the browser as the user scrolls.
+    func loadNextMetadataPage(count: Int = 50) async {
+        guard !metadataLoading else { return }
+        guard let session else { return }
+        let unknown = photos.filter { $0.info == nil }
+        guard !unknown.isEmpty else { return }
+        metadataLoading = true
+        defer { metadataLoading = false }
+
+        for item in unknown.prefix(count) {
+            do {
+                let info = try session.objectInfo(handle: item.handle)
+                if let idx = photos.firstIndex(where: { $0.handle == item.handle }) {
+                    photos[idx].info = info
+                }
+                await cache.storeObjectInfo(info, rawData: info.rawData)
+            } catch {
+                failConnect(error)
+                return
+            }
+        }
+        metadataLoadedCount = photos.lazy.filter { $0.info != nil }.count
+    }
+
+    /// Single-photo metadata fetch (used by the detail view).
     func loadInfos(for items: [PhotoItem]) async {
         guard let session else { return }
         let unknown = items.filter { $0.info == nil }
@@ -162,6 +195,7 @@ final class AppState: ObservableObject {
                 return
             }
         }
+        metadataLoadedCount = photos.lazy.filter { $0.info != nil }.count
     }
 
     func thumbnail(for item: PhotoItem) async -> Data? {
@@ -317,22 +351,49 @@ final class AppState: ObservableObject {
     // MARK: - filters
 
     var visiblePhotos: [PhotoItem] {
+        var list: [PhotoItem]
         switch filter {
         case .all:
-            return photos
+            list = photos
         case .starred:
-            return photos.filter { (ratings[$0.handle] ?? 0) > 0 }
+            list = photos.filter { (ratings[$0.handle] ?? 0) > 0 }
         case .jpeg:
-            return photos.filter { $0.info?.format == .exifJpeg }
+            list = photos.filter { $0.info?.format == .exifJpeg }
         case .dng:
-            return photos.filter { $0.info?.format == .tiffDNG }
+            list = photos.filter { $0.info?.format == .tiffDNG }
         }
+        let q = searchText.trimmingCharacters(in: .whitespaces)
+        if !q.isEmpty {
+            list = list.filter {
+                $0.info?.filename.localizedCaseInsensitiveContains(q) == true
+            }
+        }
+        return list
     }
 
     // MARK: - settings / cache maintenance
 
     func refreshCacheUsage() async {
         cacheUsage = await cache.usage()
+    }
+
+    /// EXPERIMENTAL (hardware day): ask the newest photo which object
+    /// properties the camera exposes — one query per session, logged for
+    /// analysis in Settings. Groundwork for pre-download star ratings.
+    @Published var experimentalPreread = UserDefaults.standard.bool(forKey: "m10.exp.preread") {
+        didSet { UserDefaults.standard.set(experimentalPreread, forKey: "m10.exp.preread") }
+    }
+    @Published var discoveredObjectProps: [UInt16]?
+
+    func probeObjectProps() async {
+        guard let session, discoveredObjectProps == nil,
+              let newest = photos.first else { return }
+        do {
+            let codes = try session.objectPropsSupported(handle: newest.handle)
+            discoveredObjectProps = codes
+        } catch {
+            wifiStatus = "Property probe failed (harmless): \(String(describing: error))"
+        }
     }
 
     func clearCache(keepMetadata: Bool) async {
