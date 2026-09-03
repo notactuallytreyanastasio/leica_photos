@@ -9,10 +9,13 @@
 /* Begin PBXBuildFile section */
 		2B94D89E99BF778786541985 /* CameraDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FD5F6AA2A9F190645BC410 /* CameraDiscovery.swift */; };
 		35840CA68E0154498A897B36 /* M10Kit in Frameworks */ = {isa = PBXBuildFile; productRef = CBAAF4EA49EE2163EF8472BD /* M10Kit */; };
+		4AF965C5F0D11E9F5AFC8AD3 /* PhotoKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDEDF9A6F74E31795608283 /* PhotoKitService.swift */; };
 		5BD51B2302173ADBAA243A0F /* M10AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6110733BC1B6E8BDCC97E1C /* M10AppTests.swift */; };
 		6732A9CB10E7A49483B68565 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA63CCA91F743E3202BE7DED /* BrowserView.swift */; };
+		6FB06CE35A9769D04251EA7F /* WifiJoin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB8FA71BCA45D6B548952BB3 /* WifiJoin.swift */; };
 		7AE90D711FDD17DAA21E6A2D /* ConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F456838FDDC743596DBBAF75 /* ConnectView.swift */; };
 		C7546E71AA2B77415C34A327 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C29D1B3F3C69166D5979BB1 /* AppState.swift */; };
+		CA28CA5B653184300C3A172F /* PhotoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C571F82E9ABCDE0CBB0A11D /* PhotoDetailView.swift */; };
 		DD58A5EEC227BF4A3E263CE1 /* M10AppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA8091E673757F44D1818E0 /* M10AppApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -30,10 +33,14 @@
 		0E5DC1FEDCA4523FCA2B9470 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		13FD5F6AA2A9F190645BC410 /* CameraDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraDiscovery.swift; sourceTree = "<group>"; };
 		1BA8091E673757F44D1818E0 /* M10AppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = M10AppApp.swift; sourceTree = "<group>"; };
-		205CC9101A80A8A68BA392F2 /* M10AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = M10AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		205CC9101A80A8A68BA392F2 /* M10AppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = M10AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B0813D914F164FC162ACFAA /* M10Kit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = M10Kit; path = ../M10Kit; sourceTree = SOURCE_ROOT; };
-		689D66AE095F192127374FA1 /* M10App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = M10App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C571F82E9ABCDE0CBB0A11D /* PhotoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailView.swift; sourceTree = "<group>"; };
+		689D66AE095F192127374FA1 /* M10App.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = M10App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D6AC67C0E259A7F15BB0E9F /* M10App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = M10App.entitlements; sourceTree = "<group>"; };
 		9C29D1B3F3C69166D5979BB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		9FDEDF9A6F74E31795608283 /* PhotoKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoKitService.swift; sourceTree = "<group>"; };
+		AB8FA71BCA45D6B548952BB3 /* WifiJoin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WifiJoin.swift; sourceTree = "<group>"; };
 		F456838FDDC743596DBBAF75 /* ConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectView.swift; sourceTree = "<group>"; };
 		F6110733BC1B6E8BDCC97E1C /* M10AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = M10AppTests.swift; sourceTree = "<group>"; };
 		FA63CCA91F743E3202BE7DED /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
@@ -75,7 +82,11 @@
 				13FD5F6AA2A9F190645BC410 /* CameraDiscovery.swift */,
 				F456838FDDC743596DBBAF75 /* ConnectView.swift */,
 				0E5DC1FEDCA4523FCA2B9470 /* Info.plist */,
+				8D6AC67C0E259A7F15BB0E9F /* M10App.entitlements */,
 				1BA8091E673757F44D1818E0 /* M10AppApp.swift */,
+				4C571F82E9ABCDE0CBB0A11D /* PhotoDetailView.swift */,
+				9FDEDF9A6F74E31795608283 /* PhotoKitService.swift */,
+				AB8FA71BCA45D6B548952BB3 /* WifiJoin.swift */,
 			);
 			path = M10App;
 			sourceTree = "<group>";
@@ -186,6 +197,9 @@
 				2B94D89E99BF778786541985 /* CameraDiscovery.swift in Sources */,
 				7AE90D711FDD17DAA21E6A2D /* ConnectView.swift in Sources */,
 				DD58A5EEC227BF4A3E263CE1 /* M10AppApp.swift in Sources */,
+				CA28CA5B653184300C3A172F /* PhotoDetailView.swift in Sources */,
+				4AF965C5F0D11E9F5AFC8AD3 /* PhotoKitService.swift in Sources */,
+				6FB06CE35A9769D04251EA7F /* WifiJoin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -212,7 +226,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = NY422J2AAW;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -349,10 +362,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = M10App/M10App.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATH = "";
-				DEVELOPMENT_TEAM = NY422J2AAW;
 				INFOPLIST_FILE = M10App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -369,7 +381,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = NY422J2AAW;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -387,10 +398,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = M10App/M10App.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATH = "";
-				DEVELOPMENT_TEAM = NY422J2AAW;
 				INFOPLIST_FILE = M10App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

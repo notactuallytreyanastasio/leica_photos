@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// Step 1: join the camera's WiFi, then connect.
-/// In a future iteration this can drive NEHotspotConfiguration to prompt
-/// the join automatically (needs the Hotspot Configuration entitlement).
+/// "Join camera WiFi" uses NEHotspotConfiguration (the GoPro-style prompt)
+/// — needs the Hotspot entitlement on a real device; in the simulator,
+/// join from Mac settings instead.
 struct ConnectView: View {
     @EnvironmentObject var appState: AppState
 
@@ -20,7 +21,7 @@ struct ConnectView: View {
                 .multilineTextAlignment(.center)
 
             if appState.phase == .disconnected {
-                instructions
+                joinCard
                 Button("Connect") { appState.connect() }
                     .buttonStyle(.borderedProminent)
             }
@@ -29,24 +30,41 @@ struct ConnectView: View {
         .padding()
     }
 
-    private var instructions: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label {
-                Text("Enable WiFi on the camera (favorite button in playback)")
-            } icon: {
-                Image(systemName: "1.circle.fill")
+    private var joinCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Join the camera's WiFi", systemImage: "wifi")
+                .font(.headline)
+
+            TextField("Network name (e.g. LeicaM10-5230856)",
+                      text: $appState.ssid)
+                .textFieldStyle(.roundedBorder)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.characters)
+
+            SecureField("Password (shown on the camera)",
+                        text: $appState.wifiPassword)
+                .textFieldStyle(.roundedBorder)
+
+            Button {
+                Task { await appState.joinCameraWiFi() }
+            } label: {
+                Label("Join camera WiFi", systemImage: "wifi.router")
+                    .frame(maxWidth: .infinity)
             }
-            Label {
-                Text("Join the camera's network in Settings → Wi-Fi")
-            } icon: {
-                Image(systemName: "2.circle.fill")
+            .buttonStyle(.bordered)
+
+            if let status = appState.wifiStatus {
+                Text(status)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            Label {
-                Text("Come back and tap Connect")
-            } icon: {
-                Image(systemName: "3.circle.fill")
-            }
+
+            Divider()
+            Text("Then tap Connect — the camera is found automatically.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        .font(.subheadline)
+        .padding()
+        .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
     }
 }

@@ -25,6 +25,9 @@ targets:
           M10 connects to your Leica camera's WiFi network to browse and
           download photos.
         NSBonjourServices: [_ptp._tcp]
+        NSPhotoLibraryAddUsageDescription: >-
+          M10 saves downloaded photos to your photo library, filing
+          starred shots into “Best of Leica” and DNGs into “RAW Leica”.
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
     settings:
@@ -32,7 +35,7 @@ targets:
         SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_ASSET_PATH: ""
+        CODE_SIGN_ENTITLEMENTS: M10App/M10App.entitlements
   M10AppTests:
     type: bundle.unit-test
     platform: iOS
