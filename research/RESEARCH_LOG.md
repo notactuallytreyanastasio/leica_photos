@@ -391,3 +391,17 @@ testable without the camera; hardware validation only when user opts in.
 - DNGs → "RAW Leica" album (starred DNG → both)
 - NO bulk transfers — they always fail (matches the camera's fragility);
   the app imports one photo at a time, sequentially, stop-on-first-failure
+
+## CACHE + POLISH INCREMENT (2026-09-03)
+
+- M10Kit: EXIF parser (TIFF/DNG + JPEG APP1; handles M10's APEX-style
+  values) — validated against the real DNG fixture; 13/13 tests green
+- M10App: disk cache (Documents/PhotoCache) — ObjectInfo blobs,
+  thumbnails, full downloads (LRU @1GB), ratings + saved status;
+  batch hydration on connect; re-browsing is nearly camera-free
+- Polish: camera header (fw/serial/battery), filter chips
+  (All/★/JPEG/DNG), date-grouped grid, EXIF line in detail view,
+  friendly errors ("camera needs a rest"), haptics, Keychain for
+  WiFi passwords, settings sheet (cache usage/clear), generated
+  app icon (tools/generate_icon.swift)
+- Repo pushed to GitHub as an educational project
