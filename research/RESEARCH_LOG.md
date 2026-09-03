@@ -384,3 +384,10 @@ NEXT: photo detail view + download flow, PhotoKit import (favorites
 from xmp:Rating, album mirroring), NEHotspotConfiguration join flow
 (needs Hotspot entitlement), star-filter UI. All buildable and
 testable without the camera; hardware validation only when user opts in.
+
+## PRODUCT RULES (from the owner, 2026-09-03)
+
+- starred photos (xmp:Rating > 0) → Photos Favorite + "Best of Leica" album
+- DNGs → "RAW Leica" album (starred DNG → both)
+- NO bulk transfers — they always fail (matches the camera's fragility);
+  the app imports one photo at a time, sequentially, stop-on-first-failure
