@@ -67,16 +67,16 @@ actor PhotoCache {
     // MARK: - metadata
 
     func objectInfo(for handle: UInt32) -> ObjectInfo? {
-        guard let data = entries[handle]?.objectInfoData else { return nil }
+        guard let data = entry(handle)?.objectInfoData else { return nil }
         noteAccess(handle)
         return try? ObjectInfo(data: data, handle: handle)
     }
 
     func storeObjectInfo(_ info: ObjectInfo, rawData: Data) {
-        var e = entries[handle: info.handle]
-        e.objectInfoData = rawData
-        e.filename = info.filename
-        entries[info.handle] = e
+        mutateEntry(info.handle) {
+            $0.objectInfoData = rawData
+            $0.filename = info.filename
+        }
         saveIndex()
     }
 
@@ -90,8 +90,7 @@ actor PhotoCache {
 
     func storeThumbnail(_ handle: UInt32, data: Data) {
         try? data.write(to: thumbURL(handle), options: .atomic)
-        entries[handle: handle].hasThumb = true
-        entries[handle: handle].filename = entries[handle]?.filename  // touch
+        mutateEntry(handle) { $0.hasThumb = true }
         noteAccess(handle)
         saveIndex()
     }
@@ -111,7 +110,7 @@ actor PhotoCache {
 
     func storeFullPhoto(_ handle: UInt32, data: Data) {
         try? data.write(to: imageURL(handle), options: .atomic)
-        entries[handle: handle].hasFull = true
+        mutateEntry(handle) { $0.hasFull = true }
         noteAccess(handle)
         evictIfNeeded()
         saveIndex()
@@ -120,11 +119,11 @@ actor PhotoCache {
     // MARK: - status
 
     func rating(for handle: UInt32) -> Int? {
-        entries[handle]?.rating
+        entry(handle)?.rating
     }
 
     func setRating(_ handle: UInt32, _ rating: Int) {
-        entries[handle: handle].rating = rating
+        mutateEntry(handle) { $0.rating = rating }
         saveIndex()
     }
 
@@ -133,7 +132,7 @@ actor PhotoCache {
     }
 
     func markSavedToPhotos(_ handle: UInt32) {
-        entries[handle: handle].savedToPhotos = true
+        mutateEntry(handle) { $0.savedToPhotos = true }
         saveIndex()
     }
 
@@ -164,12 +163,8 @@ actor PhotoCache {
     func usage() -> (entries: Int, fulls: Int, thumbs: Int, bytes: Int) {
         let fulls = entries.filter(\.value.hasFull)
         let thumbs = entries.filter(\.value.hasThumb)
-        let fullBytes = fulls.reduce(0) {
-            $0 + ((try? FileManager.default.attributesOfItem(atPath: imageURL($1.key).path)[.size] as? Int) ?? 0)
-        }
-        let thumbBytes = thumbs.reduce(0) {
-            $0 + ((try? FileManager.default.attributesOfItem(atPath: thumbURL($1.key).path)[.size] as? Int) ?? 0)
-        }
+        let fullBytes = fulls.reduce(0) { $0 + fileSize(imageURL($1.key)) }
+        let thumbBytes = thumbs.reduce(0) { $0 + fileSize(thumbURL($1.key)) }
         return (entries.count, fulls.count, thumbs.count, fullBytes + thumbBytes)
     }
 
@@ -192,32 +187,38 @@ actor PhotoCache {
     // MARK: - eviction (full images only, LRU)
 
     private func noteAccess(_ handle: UInt32) {
-        entries[handle: handle].lastAccess = Date()
+        mutateEntry(handle) { $0.lastAccess = Date() }
     }
 
     private func evictIfNeeded() {
-        let urls = (entries.filter(\.value.hasFull).map(\.key))
-            .map(imageURL)
-        var total = urls.reduce(0) { $0 + (try? FileManager.default.attributesOfItem(atPath: $1.path)[.size] as? Int ?? 0 ?? 0) }
-        if total <= maxFullBytes { return }
+        var total = entries.filter(\.value.hasFull)
+            .reduce(0) { $0 + fileSize(imageURL($1.key)) }
+        guard total > maxFullBytes else { return }
         // evict least-recently-used full images until under cap
         let byAge = entries.filter { $0.value.hasFull }
             .sorted { $0.value.lastAccess < $1.value.lastAccess }
         for (handle, _) in byAge {
             guard total > maxFullBytes else { break }
             let url = imageURL(handle)
-            if let size = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int {
-                total -= size
-            }
+            total -= fileSize(url)
             try? FileManager.default.removeItem(at: url)
             entries[handle]?.hasFull = false
         }
     }
-}
 
-private extension Dictionary where Key == UInt32 {
-    subscript(handle key: Key) -> PhotoCache.Entry {
-        get { self[key] ?? PhotoCache.Entry(handle: key, lastAccess: Date()) }
-        set { self[key] = newValue }
+    private func fileSize(_ url: URL) -> Int {
+        (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int ?? 0
+    }
+
+    // MARK: - entry access helpers
+
+    private func entry(_ handle: UInt32) -> Entry? {
+        entries[handle]
+    }
+
+    private func mutateEntry(_ handle: UInt32, _ body: (inout Entry) -> Void) {
+        var e = entries[handle] ?? Entry(handle: handle, lastAccess: Date())
+        body(&e)
+        entries[handle] = e
     }
 }

@@ -381,5 +381,11 @@ final class PhotoItem: Identifiable {
     var info: ObjectInfo?
     var thumb: Data?
 
+    init(handle: UInt32, info: ObjectInfo? = nil, thumb: Data? = nil) {
+        self.handle = handle
+        self.info = info
+        self.thumb = thumb
+    }
+
     var id: UInt32 { handle }
 }
