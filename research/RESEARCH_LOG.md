@@ -405,3 +405,14 @@ testable without the camera; hardware validation only when user opts in.
   WiFi passwords, settings sheet (cache usage/clear), generated
   app icon (tools/generate_icon.swift)
 - Repo pushed to GitHub as an educational project
+
+## PAGING + EXPERIMENTAL PROBE (2026-09-03)
+
+- Metadata pages in batches of 50 while scrolling (progress shown);
+  filename search; single-item fetch kept for the detail view
+- MTP groundwork: objectPropsSupported/objectPropValue in the kit;
+  experimental Settings toggle probes the newest photo once per
+  session and lists the camera's object property codes — to be run
+  on a hardware day to find the pre-download rating property
+- README: real-device run instructions (signing, entitlement,
+  privacy prompts, gentle-session expectations)
