@@ -1,0 +1,50 @@
+name: M10App
+options:
+  bundleIdPrefix: com.glmfunk
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+packages:
+  M10Kit:
+    path: ../M10Kit
+
+targets:
+  M10App:
+    type: application
+    platform: iOS
+    sources: [M10App]
+    dependencies:
+      - package: M10Kit
+    info:
+      path: M10App/Info.plist
+      properties:
+        CFBundleDisplayName: M10
+        UILaunchScreen: {}
+        NSLocalNetworkUsageDescription: >-
+          M10 connects to your Leica camera's WiFi network to browse and
+          download photos.
+        NSBonjourServices: [_ptp._tcp]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_ASSET_PATH: ""
+  M10AppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [M10AppTests]
+    dependencies:
+      - target: M10App
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  M10App:
+    build:
+      targets: { M10App: all }
+    test:
+      targets: [M10AppTests]
