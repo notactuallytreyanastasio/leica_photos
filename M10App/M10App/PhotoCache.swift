@@ -36,6 +36,11 @@ actor PhotoCache {
     /// tiny and are never evicted.
     var maxFullBytes: Int = 1_000_000_000
 
+    /// Test hook: set the eviction cap (actor-isolated setter).
+    func setTestCap(_ bytes: Int) {
+        maxFullBytes = bytes
+    }
+
     init(directory: URL? = nil) {
         let base = directory ?? FileManager.default
             .urls(for: .documentDirectory, in: .userDomainMask)[0]

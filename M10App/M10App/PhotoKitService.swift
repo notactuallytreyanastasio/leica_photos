@@ -15,8 +15,10 @@ enum PhotoKitService {
     static let starredAlbum = "Best of Leica"
     static let rawAlbum = "RAW Leica"
 
+    /// Full library access: the app's purpose is organizing — finding and
+    /// filing into albums requires reads, which add-only doesn't permit.
     static func requestAccess() async -> Bool {
-        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
         return status == .authorized || status == .limited
     }
 
@@ -60,40 +62,37 @@ enum PhotoKitService {
     }
 
     private static func addToAlbum(assetID: String, album: String) async throws {
-        let created = try await PHPhotoLibrary.shared().performChanges {
-            // existing album?
-            let fetch = PHAssetCollection.fetchAssetCollections(
-                with: .album, subtype: .albumRegular, options: nil)
-            var existing: PHAssetCollection?
-            fetch.enumerateObjects { c, _, stop in
-                if c.localizedTitle == album {
-                    existing = c
-                    stop.pointee = true
-                }
-            }
-            if existing == nil {
+        // All FETCHES happen outside change blocks — fetching inside one
+        // can deadlock (PhotoKit returns empty results; bitten by this).
+        if findAlbum(titled: album) == nil {
+            try await PHPhotoLibrary.shared().performChanges {
                 PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: album)
             }
         }
-        _ = created
-
-        // fetch the (now certainly existing) album + the asset, add
+        guard let collection = findAlbum(titled: album) else {
+            throw PhotoKitError.importFailed
+        }
+        let assetFetch = PHAsset.fetchAssets(withLocalIdentifiers: [assetID], options: nil)
+        guard let asset = assetFetch.firstObject else {
+            throw PhotoKitError.importFailed
+        }
         try await PHPhotoLibrary.shared().performChanges {
-            let collFetch = PHAssetCollection.fetchAssetCollections(
-                with: .album, subtype: .albumRegular, options: nil)
-            var collection: PHAssetCollection?
-            collFetch.enumerateObjects { c, _, stop in
-                if c.localizedTitle == album {
-                    collection = c
-                    stop.pointee = true
-                }
-            }
-            guard let collection else { return }
-            let assetFetch = PHAsset.fetchAssets(withLocalIdentifiers: [assetID], options: nil)
-            guard let asset = assetFetch.firstObject else { return }
             PHAssetCollectionChangeRequest(for: collection)?
                 .addAssets([asset] as NSArray)
         }
+    }
+
+    private static func findAlbum(titled title: String) -> PHAssetCollection? {
+        let fetch = PHAssetCollection.fetchAssetCollections(
+            with: .album, subtype: .albumRegular, options: nil)
+        var found: PHAssetCollection?
+        fetch.enumerateObjects { c, _, stop in
+            if c.localizedTitle == title {
+                found = c
+                stop.pointee = true
+            }
+        }
+        return found
     }
 
     enum PhotoKitError: LocalizedError {

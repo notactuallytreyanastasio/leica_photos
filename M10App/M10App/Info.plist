@@ -30,6 +30,8 @@
 	<string>M10 connects to your Leica camera's WiFi network to browse and download photos.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>M10 saves downloaded photos to your photo library, filing starred shots into “Best of Leica” and DNGs into “RAW Leica”.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>M10 verifies saved photos and albums (read access only).</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

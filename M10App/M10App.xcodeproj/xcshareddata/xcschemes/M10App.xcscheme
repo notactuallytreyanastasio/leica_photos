@@ -50,6 +50,17 @@
                ReferencedContainer = "container:M10App.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "A8394036411D74D3C765D525"
+               BuildableName = "M10AppUITests.xctest"
+               BlueprintName = "M10AppUITests"
+               ReferencedContainer = "container:M10App.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

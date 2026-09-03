@@ -1,9 +1,20 @@
 import SwiftUI
+import Photos
 
 /// Settings sheet: cache usage + maintenance, album rules reference.
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
+
+    private var photoAccessLabel: String {
+        switch PHPhotoLibrary.authorizationStatus(for: .readWrite) {
+        case .authorized: return "Full access"
+        case .limited: return "Limited"
+        case .denied, .restricted: return "Denied"
+        case .notDetermined: return "Not requested"
+        @unknown default: return "?"
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -54,6 +65,21 @@ struct SettingsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                }
+
+                Section("Photos access") {
+                    HStack {
+                        Text("Library access")
+                        Spacer()
+                        Text(photoAccessLabel)
+                            .foregroundStyle(.secondary)
+                    }
+                    Button("Request access now") {
+                        Task { _ = await PhotoKitService.requestAccess() }
+                    }
+                    Text("Needed to file photos into “Best of Leica” and “RAW Leica”. You can also pre-grant it here instead of at first save.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
 
                 Section("About") {

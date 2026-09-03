@@ -24,7 +24,6 @@ struct BrowserView: View {
             }
             .padding(.horizontal, 4)
         }
-        .searchable(text: $appState.searchText, prompt: "Search filename")
         .task { await appState.loadNextMetadataPage() }
         .navigationTitle(appState.cameraName)
         .navigationBarTitleDisplayMode(.inline)

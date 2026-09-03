@@ -28,6 +28,8 @@ targets:
         NSPhotoLibraryAddUsageDescription: >-
           M10 saves downloaded photos to your photo library, filing
           starred shots into “Best of Leica” and DNGs into “RAW Leica”.
+        NSPhotoLibraryUsageDescription: >-
+          M10 verifies saved photos and albums (read access only).
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
     settings:
@@ -45,9 +47,19 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+  M10AppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [M10AppUITests]
+    dependencies:
+      - target: M10App
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: M10App
 schemes:
   M10App:
     build:
       targets: { M10App: all }
     test:
-      targets: [M10AppTests]
+      targets: [M10AppTests, M10AppUITests]

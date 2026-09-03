@@ -45,6 +45,14 @@ final class AppState: ObservableObject {
     @Published var starredImportRunning = false
     @Published var starredImportMessage: String?
 
+    /// True while any camera transfer is in flight — drives the
+    /// TransferGuard (idle timer + background grace + clean abort).
+    @Published var hasActiveTransfer = false
+
+    func refreshActiveTransfer() {
+        hasActiveTransfer = !downloadProgress.isEmpty || starredImportRunning
+    }
+
     // settings
     @Published var cacheUsage: (entries: Int, fulls: Int, thumbs: Int, bytes: Int)?
     @Published var showSettings = false
@@ -145,6 +153,8 @@ final class AppState: ObservableObject {
         fullPhotos = []
         ratings = [:]
         savedToPhotos = []
+        starredImportRunning = false
+        refreshActiveTransfer()
         phase = .disconnected
     }
 
@@ -152,7 +162,6 @@ final class AppState: ObservableObject {
 
     @Published var metadataLoading = false
     @Published var metadataLoadedCount = 0
-    @Published var searchText = ""
 
     /// Load the next page of photo metadata (newest-first), 50 at a time,
     /// cache-first. Called by the browser as the user scrolls.
@@ -238,6 +247,7 @@ final class AppState: ObservableObject {
 
         guard let session else { return }
         downloadProgress[handle] = 0
+        refreshActiveTransfer()
         let box = ProgressBox()
         Task.detached(priority: .userInitiated) { [weak self] in
             do {
@@ -264,6 +274,7 @@ final class AppState: ObservableObject {
         fullPhotos.insert(handle)
         ratings[handle] = rating
         downloadProgress[handle] = nil
+        refreshActiveTransfer()
         Haptics.success()
     }
 
@@ -312,6 +323,7 @@ final class AppState: ObservableObject {
             return
         }
         starredImportRunning = true
+        refreshActiveTransfer()
         starredImportMessage = nil
         for handle in pending {
             starredImportMessage = "Saving \(pending.firstIndex(of: handle)! + 1) of \(pending.count)…"
@@ -324,6 +336,22 @@ final class AppState: ObservableObject {
         }
         starredImportMessage = "Saved \(pending.count) starred photos to “\(PhotoKitService.starredAlbum)”."
         starredImportRunning = false
+        refreshActiveTransfer()
+    }
+
+    /// Called by TransferGuard when iOS's background grace expires with a
+    /// transfer still in flight: close the session politely so the camera
+    /// never sees a suspended-mid-write client.
+    func backgroundGraceExpired() async {
+        guard hasActiveTransfer else { return }
+        if session != nil {
+            failConnect(M10Error.sessionExpired)
+        } else {
+            // no session (e.g. Photos-only import): just clear transfer state
+            downloadProgress = [:]
+            starredImportRunning = false
+            refreshActiveTransfer()
+        }
     }
 
     // MARK: - WiFi join
@@ -351,24 +379,16 @@ final class AppState: ObservableObject {
     // MARK: - filters
 
     var visiblePhotos: [PhotoItem] {
-        var list: [PhotoItem]
         switch filter {
         case .all:
-            list = photos
+            return photos
         case .starred:
-            list = photos.filter { (ratings[$0.handle] ?? 0) > 0 }
+            return photos.filter { (ratings[$0.handle] ?? 0) > 0 }
         case .jpeg:
-            list = photos.filter { $0.info?.format == .exifJpeg }
+            return photos.filter { $0.info?.format == .exifJpeg }
         case .dng:
-            list = photos.filter { $0.info?.format == .tiffDNG }
+            return photos.filter { $0.info?.format == .tiffDNG }
         }
-        let q = searchText.trimmingCharacters(in: .whitespaces)
-        if !q.isEmpty {
-            list = list.filter {
-                $0.info?.filename.localizedCaseInsensitiveContains(q) == true
-            }
-        }
-        return list
     }
 
     // MARK: - settings / cache maintenance
