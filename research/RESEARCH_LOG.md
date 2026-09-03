@@ -416,3 +416,22 @@ testable without the camera; hardware validation only when user opts in.
   on a hardware day to find the pre-download rating property
 - README: real-device run instructions (signing, entitlement,
   privacy prompts, gentle-session expectations)
+
+## VERIFIED ALBUMS + SCREEN-LOCK GUARD (2026-09-03)
+
+Answered "does it make the albums?" with proof, not promises:
+integration tests now run against a REAL Photos library (simulator):
+import → Favorite set → "Best of Leica" + "RAW Leica" created and
+populated. Two real bugs found & fixed along the way:
+1. fetching inside performChanges deadlocks (PhotoKit returns empty,
+   silently) — all fetches moved outside change blocks
+2. album work needs readWrite access, not add-only (finding existing
+   albums is a read) — permission model + Settings pre-grant UI added
+Permission bootstrap: simctl privacy grants wouldn't bind for
+readWrite; a one-time UI test taps the actual system dialog instead.
+
+Screen-lock protection (user requirement): TransferGuard keeps the
+screen awake during transfers; on lock/background, ~30s grace, then a
+POLITE session close (wedge protection) + resumable state via cache.
+
+Suite: 18/18 app (incl. real-library integration) + 13/13 kit.
