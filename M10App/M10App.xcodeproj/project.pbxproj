@@ -51,6 +51,7 @@
 		1BA8091E673757F44D1818E0 /* M10AppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = M10AppApp.swift; sourceTree = "<group>"; };
 		205CC9101A80A8A68BA392F2 /* M10AppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = M10AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		21DDDA714B47A11BE9E6ADD3 /* TransferGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferGuard.swift; sourceTree = "<group>"; };
+		3692A9B6E04F67E41077C3C2 /* M10App.hotspot-optional.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "M10App.hotspot-optional.entitlements"; sourceTree = "<group>"; };
 		3B0813D914F164FC162ACFAA /* M10Kit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = M10Kit; path = ../M10Kit; sourceTree = SOURCE_ROOT; };
 		4C571F82E9ABCDE0CBB0A11D /* PhotoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailView.swift; sourceTree = "<group>"; };
 		5693BBCAF4143E72D1B233D1 /* PhotoKitServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoKitServiceTests.swift; sourceTree = "<group>"; };
@@ -59,7 +60,6 @@
 		689D66AE095F192127374FA1 /* M10App.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = M10App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		861AA5B65F51384969653706 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		8837B06C451335CD179AF9A0 /* M10AppUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = M10AppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		8D6AC67C0E259A7F15BB0E9F /* M10App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = M10App.entitlements; sourceTree = "<group>"; };
 		96D87E2AC9782C30EBB9DD43 /* PhotoCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCache.swift; sourceTree = "<group>"; };
 		9C29D1B3F3C69166D5979BB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		9D542CF275D89ED916C5AE1C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -121,7 +121,7 @@
 				F456838FDDC743596DBBAF75 /* ConnectView.swift */,
 				0E5DC1FEDCA4523FCA2B9470 /* Info.plist */,
 				E0E7E32CD5FA781D288E20E3 /* Keychain.swift */,
-				8D6AC67C0E259A7F15BB0E9F /* M10App.entitlements */,
+				3692A9B6E04F67E41077C3C2 /* M10App.hotspot-optional.entitlements */,
 				1BA8091E673757F44D1818E0 /* M10AppApp.swift */,
 				96D87E2AC9782C30EBB9DD43 /* PhotoCache.swift */,
 				4C571F82E9ABCDE0CBB0A11D /* PhotoDetailView.swift */,
@@ -477,7 +477,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = M10App/M10App.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = M10App/Info.plist;
@@ -530,7 +529,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = M10App/M10App.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = M10App/Info.plist;

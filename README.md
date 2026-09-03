@@ -95,10 +95,18 @@ without a camera.
 **On a real device** (needed for camera WiFi):
 
 1. Open `M10App.xcodeproj`, select the M10App target → Signing & Capabilities,
-   and set your team. The Hotspot Configuration entitlement
-   (`com.apple.developer.networking.hotspotconfiguration`) is already in
-   `M10App/M10App.entitlements`; with automatic signing Xcode registers it
-   with your provisioning profile.
+   and set your team. The app builds with NO special entitlements —
+   free/personal teams work. Join the camera's WiFi manually the first
+   time (Settings → Wi-Fi); the app's join button detects this and tells
+   you what to do.
+2. OPTIONAL — in-app WiFi join (GoPro-style system prompt) needs the
+   Hotspot Configuration entitlement, which requires a paid Apple
+   Developer account AND an explicit (non-wildcard) App ID. To enable:
+   rename `M10App/M10App.hotspot-optional.entitlements` to
+   `M10App/M10App.entitlements`, add
+   `CODE_SIGN_ENTITLEMENTS: M10App/M10App.entitlements` under the target's
+   `settings: base:` in `project.yml`, run `xcodegen generate`, and make
+   sure the bundle ID isn't matching a wildcard profile.
 2. Build & run on the device. First use: Settings → Privacy → Local Network
    → allow M10 (the prompt appears on first browse).
 3. Photos access: the app requests add-only access on first save — the

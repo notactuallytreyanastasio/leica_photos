@@ -37,7 +37,6 @@ targets:
         SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
-        CODE_SIGN_ENTITLEMENTS: M10App/M10App.entitlements
   M10AppTests:
     type: bundle.unit-test
     platform: iOS
