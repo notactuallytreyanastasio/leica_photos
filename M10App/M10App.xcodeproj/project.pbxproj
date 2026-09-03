@@ -7,16 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		107A4DE1C421D397376D8304 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 861AA5B65F51384969653706 /* SettingsView.swift */; };
 		2B94D89E99BF778786541985 /* CameraDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FD5F6AA2A9F190645BC410 /* CameraDiscovery.swift */; };
 		35840CA68E0154498A897B36 /* M10Kit in Frameworks */ = {isa = PBXBuildFile; productRef = CBAAF4EA49EE2163EF8472BD /* M10Kit */; };
 		4AF965C5F0D11E9F5AFC8AD3 /* PhotoKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDEDF9A6F74E31795608283 /* PhotoKitService.swift */; };
 		5BD51B2302173ADBAA243A0F /* M10AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6110733BC1B6E8BDCC97E1C /* M10AppTests.swift */; };
 		6732A9CB10E7A49483B68565 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA63CCA91F743E3202BE7DED /* BrowserView.swift */; };
 		6FB06CE35A9769D04251EA7F /* WifiJoin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB8FA71BCA45D6B548952BB3 /* WifiJoin.swift */; };
+		758712F9FEF5D35D3715424C /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96D87E2AC9782C30EBB9DD43 /* PhotoCache.swift */; };
 		7AE90D711FDD17DAA21E6A2D /* ConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F456838FDDC743596DBBAF75 /* ConnectView.swift */; };
+		8D3D6AF6135D90E3A8EA0FDE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9D542CF275D89ED916C5AE1C /* Assets.xcassets */; };
 		C7546E71AA2B77415C34A327 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C29D1B3F3C69166D5979BB1 /* AppState.swift */; };
 		CA28CA5B653184300C3A172F /* PhotoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C571F82E9ABCDE0CBB0A11D /* PhotoDetailView.swift */; };
 		DD58A5EEC227BF4A3E263CE1 /* M10AppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA8091E673757F44D1818E0 /* M10AppApp.swift */; };
+		FB45A7B7EE115B8C0A50D5FD /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E7E32CD5FA781D288E20E3 /* Keychain.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,10 +41,14 @@
 		3B0813D914F164FC162ACFAA /* M10Kit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = M10Kit; path = ../M10Kit; sourceTree = SOURCE_ROOT; };
 		4C571F82E9ABCDE0CBB0A11D /* PhotoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailView.swift; sourceTree = "<group>"; };
 		689D66AE095F192127374FA1 /* M10App.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = M10App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		861AA5B65F51384969653706 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		8D6AC67C0E259A7F15BB0E9F /* M10App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = M10App.entitlements; sourceTree = "<group>"; };
+		96D87E2AC9782C30EBB9DD43 /* PhotoCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCache.swift; sourceTree = "<group>"; };
 		9C29D1B3F3C69166D5979BB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		9D542CF275D89ED916C5AE1C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9FDEDF9A6F74E31795608283 /* PhotoKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoKitService.swift; sourceTree = "<group>"; };
 		AB8FA71BCA45D6B548952BB3 /* WifiJoin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WifiJoin.swift; sourceTree = "<group>"; };
+		E0E7E32CD5FA781D288E20E3 /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		F456838FDDC743596DBBAF75 /* ConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectView.swift; sourceTree = "<group>"; };
 		F6110733BC1B6E8BDCC97E1C /* M10AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = M10AppTests.swift; sourceTree = "<group>"; };
 		FA63CCA91F743E3202BE7DED /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
@@ -78,14 +86,18 @@
 			isa = PBXGroup;
 			children = (
 				9C29D1B3F3C69166D5979BB1 /* AppState.swift */,
+				9D542CF275D89ED916C5AE1C /* Assets.xcassets */,
 				FA63CCA91F743E3202BE7DED /* BrowserView.swift */,
 				13FD5F6AA2A9F190645BC410 /* CameraDiscovery.swift */,
 				F456838FDDC743596DBBAF75 /* ConnectView.swift */,
 				0E5DC1FEDCA4523FCA2B9470 /* Info.plist */,
+				E0E7E32CD5FA781D288E20E3 /* Keychain.swift */,
 				8D6AC67C0E259A7F15BB0E9F /* M10App.entitlements */,
 				1BA8091E673757F44D1818E0 /* M10AppApp.swift */,
+				96D87E2AC9782C30EBB9DD43 /* PhotoCache.swift */,
 				4C571F82E9ABCDE0CBB0A11D /* PhotoDetailView.swift */,
 				9FDEDF9A6F74E31795608283 /* PhotoKitService.swift */,
+				861AA5B65F51384969653706 /* SettingsView.swift */,
 				AB8FA71BCA45D6B548952BB3 /* WifiJoin.swift */,
 			);
 			path = M10App;
@@ -136,6 +148,7 @@
 			buildConfigurationList = 51A9FD83E80522115B2F223E /* Build configuration list for PBXNativeTarget "M10App" */;
 			buildPhases = (
 				05764E75A8CE627EF859584A /* Sources */,
+				2676DAC7D1EC9CAE2A07DBEE /* Resources */,
 				6BC7B80069149FC899E1E2C0 /* Frameworks */,
 			);
 			buildRules = (
@@ -187,6 +200,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		2676DAC7D1EC9CAE2A07DBEE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D3D6AF6135D90E3A8EA0FDE /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		05764E75A8CE627EF859584A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -196,9 +220,12 @@
 				6732A9CB10E7A49483B68565 /* BrowserView.swift in Sources */,
 				2B94D89E99BF778786541985 /* CameraDiscovery.swift in Sources */,
 				7AE90D711FDD17DAA21E6A2D /* ConnectView.swift in Sources */,
+				FB45A7B7EE115B8C0A50D5FD /* Keychain.swift in Sources */,
 				DD58A5EEC227BF4A3E263CE1 /* M10AppApp.swift in Sources */,
+				758712F9FEF5D35D3715424C /* PhotoCache.swift in Sources */,
 				CA28CA5B653184300C3A172F /* PhotoDetailView.swift in Sources */,
 				4AF965C5F0D11E9F5AFC8AD3 /* PhotoKitService.swift in Sources */,
+				107A4DE1C421D397376D8304 /* SettingsView.swift in Sources */,
 				6FB06CE35A9769D04251EA7F /* WifiJoin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
