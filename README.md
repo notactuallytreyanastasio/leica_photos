@@ -92,6 +92,30 @@ The simulator can't join WiFi, so discovery will report "no camera found"
 there — everything else (UI, import logic) is developable and testable
 without a camera.
 
+**On a real device** (needed for camera WiFi):
+
+1. Open `M10App.xcodeproj`, select the M10App target → Signing & Capabilities,
+   and set your team. The Hotspot Configuration entitlement
+   (`com.apple.developer.networking.hotspotconfiguration`) is already in
+   `M10App/M10App.entitlements`; with automatic signing Xcode registers it
+   with your provisioning profile.
+2. Build & run on the device. First use: Settings → Privacy → Local Network
+   → allow M10 (the prompt appears on first browse).
+3. Photos access: the app requests add-only access on first save — the
+   albums ("Best of Leica", "RAW Leica") are created on first import.
+4. The "Join camera WiFi" button triggers the system join sheet; the
+   password is stored in the Keychain (never iCloud-synced Keychain is
+   used — local only).
+5. Gentle by design: sessions are capped, any camera hiccup disconnects
+   cleanly, and nothing retries in the background. If the camera goes
+   quiet, cycle its WiFi and reconnect — see the fragility notes above.
+
+**Experimental — object-property probe** (Settings → Experimental): one
+`GetObjectPropsSupported` query against the newest photo after connect,
+logging which MTP property codes the camera exposes. It's groundwork for
+reading star ratings without downloading; run it on a hardware day and
+record the codes.
+
 ## Credits & prior art
 
 - **Leica Sync** (tSoniq, 2019) — the working macOS client whose traffic
