@@ -226,6 +226,7 @@
 						TestTargetID = AD50896481EEC98FF5D26626;
 					};
 					AD50896481EEC98FF5D26626 = {
+						DevelopmentTeam = NY422J2AAW;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -479,6 +480,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NY422J2AAW;
 				INFOPLIST_FILE = M10App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -531,6 +533,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NY422J2AAW;
 				INFOPLIST_FILE = M10App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

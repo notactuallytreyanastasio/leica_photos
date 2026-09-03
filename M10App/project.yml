@@ -37,6 +37,7 @@ targets:
         SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: NY422J2AAW
   M10AppTests:
     type: bundle.unit-test
     platform: iOS
